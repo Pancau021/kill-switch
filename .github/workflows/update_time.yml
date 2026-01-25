@@ -1,0 +1,45 @@
+name: Update time in status_v2.txt
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-time:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Update time field
+        run: |
+          NOW=$(date -u +%s)
+          FILE="status_v2.txt"
+
+          if [ ! -f "$FILE" ]; then
+            echo "status=on" > "$FILE"
+            echo "expire=1769878799" >> "$FILE"
+            echo "time=$NOW" >> "$FILE"
+          else
+            if grep -q "^time=" "$FILE"; then
+              sed -i "s/^time=.*/time=$NOW/" "$FILE"
+            else
+              echo "time=$NOW" >> "$FILE"
+            fi
+          fi
+
+          echo "Updated time to $NOW"
+          cat "$FILE"
+
+      - name: Commit & push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add status_v2.txt
+          git diff --cached --quiet && exit 0
+          git commit -m "auto: update time"
+          git push
