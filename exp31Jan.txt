@@ -1,3 +1,0 @@
-status=off
-expire=100
-time=200
